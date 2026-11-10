@@ -36,6 +36,8 @@ jobs:
           git add site/data/cases.js
           git diff --cached --quiet || git commit -m "Mise à jour des cas depuis Grist"
           git push || true
+      - name: Forcer les navigateurs à charger la nouvelle version
+        run: sed -i -E "s#(href=\"style\.css|src=\"(app|data/[a-z]+)\.js)\"#\1?v=${GITHUB_RUN_ID}\"#g" site/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
