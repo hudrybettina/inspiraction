@@ -17,6 +17,8 @@ const AV = {
   lumia:[{src:'img/experts/lumia-logo.svg',logo:true}],
   hec:[{src:'img/experts/hec-logo.png',logo:true},{src:'img/experts/lehmann.jpg'},{src:'img/experts/dubreil.jpg'}],
   brunel:[{src:'img/experts/brunel.jpg'},{src:'img/experts/dubreil.jpg'}],
+  symbiotique:[{src:'img/experts/symbiotique-logo.png',logo:true}],
+  regenesis:[{src:'img/experts/regenesis-logo.png',logo:true}],
 };
 
 // ---------- experts sources ----------
@@ -50,6 +52,14 @@ const PARTNERS = [
    facts:["Exemples d'archétypes : réseau de fournisseurs régénératif, site régénératif, catalyseur de capacité collective"],
    li:[['https://www.linkedin.com/in/laurence-lehmann-ortega-95a3ab9/','Laurence Lehmann-Ortega'],['https://www.linkedin.com/in/sarahdubreil/','Sarah Dubreil']],
    link:['https://www.hec.edu/en/society-organizations-institute/news/regenerative-business-isn-t-buzzword-it-s-blueprint','Présentation HEC Paris']},
+  {id:'symbiotique', match:'ymbiotique', short:"L'Entreprise Symbiotique", name:"L'Entreprise Symbiotique — Ingénierie en économie régénérative", type:'Conseil & formation', ini:'ES',
+   desc:"L'Entreprise Symbiotique accompagne entreprises et territoires vers des modèles régénératifs, de la stratégie à la mise en œuvre : audit, formation, projets pilotes et outils de suivi. Elle s'appuie sur la théorie de l'économie symbiotique pensée par Isabelle Delannoy, à la fois socle scientifique, cadre d'action et méthode, et a pour mission de démontrer que l'économie régénérative peut remplacer le modèle extractif, à travers des exemples documentés et inspirants.",
+   facts:["Plus de 15 ans d'expérience de ses fondateurs, en France et dans le monde","A co-piloté la spécification AFNOR sur l'économie régénérative"],
+   link:['https://www.lentreprisesymbiotique.com/','lentreprisesymbiotique.com']},
+  {id:'regenesis', match:'egenesis', short:'Regenesis Institute', name:'Regenesis Institute — Regenerative Development & Design', type:'Institut international', ini:'RG',
+   desc:"Basés aux États-Unis, Regenesis Group et son institut font partie des pionniers du développement régénératif. Leur ambition : transformer la manière dont les humains habitent la Terre, en réalignant les activités humaines sur les systèmes vivants propres à chaque lieu. Ils accompagnent promoteurs, collectivités et organisations dans le monde entier et forment des praticiens à travers The Regenerative Practitioner Series.",
+   facts:["Auteurs de l'ouvrage de référence « Regenerative Development and Design: A Framework for Evolving Sustainability » (Wiley, 2016)","Cohortes de formation aux États-Unis, en Europe, en Nouvelle-Zélande et en Australie"],
+   link:['https://regenesisgroup.com/','regenesisgroup.com']},
   {id:'niels', match:'Niels de Fraguier', short:'Niels de Fraguier', name:"Niels de Fraguier — L'Entreprise régénérative", type:'Livre & base de cas', ini:'NF',
    desc:"Entrepreneur et auteur engagé sur la régénération, Niels de Fraguier a co-écrit avec Stephen Vasconcellos « The Regenerative Enterprise » (2023), paru en français sous le titre « L'entreprise régénérative – Prospérer avec le vivant » (L'éditeur à part, 2025). L'ouvrage s'appuie sur plus de 120 exemples d'entreprises pionnières, et la base de cas constituée par l'auteur est la première source de cette cartographie.",
    facts:["Co-fondateur de Positive, initiative mondiale ayant rassemblé plus de 200 entreprises, et de Corporate ReGeneration International","Enseigne l'entrepreneuriat régénératif à Sciences Po Paris"],
@@ -346,7 +356,12 @@ function renderPartnerList(){
     el('div',{class:'pgrid'}, PARTNERS.map(p=>el('button',{class:'partner',onclick:()=>{location.hash='p-'+p.id;}},
       el('div',{class:'ptop'}, avatar(p,64), el('div',{}, el('span',{class:'ptype'},p.type), el('h3',{style:'margin-top:8px'},p.name))),
       el('p',{}, p.desc.length>260 ? p.desc.slice(0,p.desc.lastIndexOf(' ',250))+'…' : p.desc),
-      el('div',{class:'go'},'Qui sont-ils ? →')))));
+      el('div',{class:'go'},'Qui sont-ils ? →'))),
+      el('div',{class:'partner soonbox'},
+        el('div',{class:'plogo-ph'},'+'),
+        el('h3',{},"D'autres sources à venir"),
+        el('p',{},"La cartographie s'enrichit au fil des travaux d'autres experts. Vous connaissez une source à intégrer ?"),
+        el('a',{class:'go',href:'https://docs.google.com/forms/d/e/1FAIpQLSfeGm5kJ-brRfsQR2Y4xlbwXPZdB864_upZ3xWdo4bvL_5VIg/viewform',target:'_blank',rel:'noopener noreferrer'},'Contactez-nous ↗'))));
 }
 function renderPartner(id){
   const p=PMAP[id]; if(!p){ location.hash='partenaires'; return; }
@@ -363,8 +378,8 @@ function renderPartner(id){
           p.link ? el('a',{class:'btn',href:p.link[0],target:'_blank',rel:'noopener noreferrer'},p.link[1]+' ↗') : null,
           (p.li||[]).map(([u,l])=>el('a',{class:'btn ghost',href:u,target:'_blank',rel:'noopener noreferrer',title:'Profil LinkedIn'},el('span',{class:'inb'},'in'),(p.li.length>1||l!==p.short?l:'LinkedIn')+' ↗')))),
       el('div',{class:'pside'},
-        el('div',{class:'pubs'}, el('h4',{},'Sources associées'), el('ul',{}, pubsOf(id).map(o=>el('li',{},o)))),
-        el('button',{class:'btn ghost',style:'align-self:flex-start',onclick:()=>{ state.q=''; document.getElementById('q').value=''; FACETS.forEach(f=>state.sel[f.key].clear()); state.sel.pt.add(p.short); location.hash='carte'; update(); }},'Voir les cas issus de cette source →'))));
+        el('div',{class:'pubs'}, el('h4',{},'Sources associées'), pubsOf(id).length ? el('ul',{}, pubsOf(id).map(o=>el('li',{},o))) : el('p',{class:'soon'},'Les cas issus de cette source arrivent bientôt dans la cartographie.')),
+        !pubsOf(id).length ? null : el('button',{class:'btn ghost',style:'align-self:flex-start',onclick:()=>{ state.q=''; document.getElementById('q').value=''; FACETS.forEach(f=>state.sel[f.key].clear()); state.sel.pt.add(p.short); location.hash='carte'; update(); }},'Voir les cas issus de cette source →'))));
 }
 function route(){
   const h=location.hash.slice(1);

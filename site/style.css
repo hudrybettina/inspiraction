@@ -177,3 +177,8 @@ nav.tabs a .n{font-size:12px;background:var(--sand);border-radius:999px;padding:
   .mapzones button{height:30px;padding:0 10px;font-size:12px}
   .legend{bottom:56px}
 }
+.partner.soonbox{border-style:dashed;background:transparent;cursor:default}
+.partner.soonbox:hover{transform:none;box-shadow:none}
+.partner.soonbox .plogo-ph{width:64px;height:64px;font-size:28px;font-weight:400}
+.partner.soonbox a.go{text-decoration:none}
+.pubs .soon{margin:0;font-size:14px;color:var(--muted);font-style:italic}
