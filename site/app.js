@@ -84,6 +84,10 @@ const pshort = id => PMAP[id].shortL || PMAP[id].short;
 const A2 = v => WORLD.nameToA2[v];
 const LC = { s:v=>I.sector(v), t:v=>I.size(v), p:v=>I.country(v,A2(v)) };
 const lst = (k,arr) => arr.map(LC[k]).join(', ');
+// description traduite si disponible (clé = empreinte du texte français)
+const TR = window.CASES_I18N || {};
+const desc = c => (LANG!=='fr' && TR[c.h] && TR[c.h][LANG]) || c.x;
+const translated = c => LANG==='fr' || !!(TR[c.h] && TR[c.h][LANG]);
 const partnerOf = src => (PARTNERS.find(p=>src.includes(p.match))||{}).id;
 
 const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
@@ -91,7 +95,7 @@ CASES.forEach((c,i)=>{
   c.i=i;
   c.n = (c.n||'').replace(/\s*\n\s*/g,' ');
   c.pt = [...new Set((c.o||[]).map(partnerOf).filter(Boolean))];
-  c._q = norm([c.n,c.x,c.s.join(' '),c.t.join(' '),c.p.join(' '),(c.o||[]).join(' '),lst('s',c.s),lst('t',c.t),lst('p',c.p)].join(' '));
+  c._q = norm([c.n,c.x,desc(c),(c.o||[]).map(I.source).join(' '),c.s.join(' '),c.t.join(' '),c.p.join(' '),(c.o||[]).join(' '),lst('s',c.s),lst('t',c.t),lst('p',c.p)].join(' '));
 });
 
 // ---------- filtres ----------
@@ -177,7 +181,7 @@ function caseCard(c, list){
     el('h4',{},c.n),
     el('div',{class:'meta'}, [lst('p',c.p), c.t.map(v=>LC.t(v).replace(/^(\S+) - /,'$1 · ')).join(', ')].filter(Boolean).join(' · ')),
     el('div',{class:'tags'}, c.s.map(s=>el('span',{class:'tag'},LC.s(s)))),
-    c.x ? el('p',{},c.x) : null,
+    c.x ? el('p',{lang:translated(c)?LANG:'fr'},desc(c)) : null,
     c.pt.length ? el('div',{class:'src'},t('source')+c.pt.map(pshort).join(' · ')) : null);
 }
 function renderGrid(list){
@@ -295,11 +299,11 @@ function sourceBoxes(c){
   for (const o of c.o){ const id=partnerOf(o)||'_'; if(!groups.has(id)) groups.set(id,[]); groups.get(id).push(o); }
   return [...groups].map(([id,refs])=>{
     const p=PMAP[id];
-    if(!p) return el('div',{class:'srcbox'}, refs.map(r=>el('div',{class:'sref'},r)));
+    if(!p) return el('div',{class:'srcbox'}, refs.map(r=>el('div',{class:'sref'},I.source(r))));
     return el('div',{class:'srcbox'},
       el('div',{style:'display:flex;gap:12px;align-items:center'}, avatar(p,40),
         el('div',{}, el('span',{class:'ptype'},p.type), el('div',{class:'sname',style:'margin-top:4px'},p.name))),
-      refs.map(r=>el('div',{class:'sref'},r)),
+      refs.map(r=>el('div',{class:'sref'},I.source(r))),
       el('button',{onclick:()=>{closeCase(); location.hash='p-'+id;}},t('discover')));
   });
 }
@@ -317,8 +321,8 @@ function openCase(i, list){
     el('div',{class:'tags',style:'margin-bottom:10px'}, c.s.map(s=>el('span',{class:'tag'},LC.s(s)))),
     el('h2',{id:'dtitle'},c.n),
     el('div',{style:'color:var(--muted)'}, [lst('p',c.p), lst('t',c.t)].filter(Boolean).join(' · ')),
-    c.x && t('descLang') ? el('div',{class:'desclang'},t('descLang')) : null,
-    c.x ? el('div',{class:'desc',lang:'fr'},c.x) : el('div',{class:'desc',style:'color:var(--muted)'},t('noDesc')),
+    c.x && !translated(c) ? el('div',{class:'desclang'},t('descLang')) : null,
+    c.x ? el('div',{class:'desc',lang:translated(c)?LANG:'fr'},desc(c)) : el('div',{class:'desc',style:'color:var(--muted)'},t('noDesc')),
     el('dl',{},
       el('dt',{},t('fCountry')), el('dd',{},lst('p',c.p)||'—'),
       el('dt',{},t('fSize')), el('dd',{},lst('t',c.t)||'—'),
@@ -386,7 +390,7 @@ function renderPartner(id){
           p.link ? el('a',{class:'btn',href:p.link[0],target:'_blank',rel:'noopener noreferrer'},p.link[1]+' ↗') : null,
           (p.li||[]).map(([u,l])=>el('a',{class:'btn ghost',href:u,target:'_blank',rel:'noopener noreferrer',title:t('liProfile')},el('span',{class:'inb'},'in'),(p.li.length>1||l!==p.short?l:'LinkedIn')+' ↗')))),
       el('div',{class:'pside'},
-        el('div',{class:'pubs'}, el('h4',{},t('related')), pubsOf(id).length ? el('ul',{}, pubsOf(id).map(o=>el('li',{},o))) : el('p',{class:'soon'},t('soonCases'))),
+        el('div',{class:'pubs'}, el('h4',{},t('related')), pubsOf(id).length ? el('ul',{}, pubsOf(id).map(o=>el('li',{},I.source(o)))) : el('p',{class:'soon'},t('soonCases'))),
         !pubsOf(id).length ? null : el('button',{class:'btn ghost',style:'align-self:flex-start',onclick:()=>{ state.q=''; document.getElementById('q').value=''; FACETS.forEach(f=>state.sel[f.key].clear()); state.sel.pt.add(p.short); location.hash='carte'; update(); }},t('seeCases')))));
 }
 function route(){

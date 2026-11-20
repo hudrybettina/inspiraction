@@ -10,7 +10,7 @@ Source (référence vers Sources_cles). Les autres colonnes sont ignorées.
 Si une de ces colonnes disparaît ou est renommée, le script s'arrête en
 erreur : le site garde alors sa version précédente.
 """
-import datetime, json, os, re, sys, urllib.request
+import datetime, hashlib, json, os, re, sys, urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SERVER = 'https://grist.numerique.gouv.fr/o/docs'
@@ -75,6 +75,7 @@ def main():
             'p': countries,
             'w': (f.get('Site_internet') or '').strip(),
             'x': (f.get('Description') or '').strip(),
+            'h': hashlib.sha1((f.get('Description') or '').strip().encode()).hexdigest()[:10],
             'o': [sources[i].replace('Lumiå', 'LUMIÅ') for i in as_list(f.get('Source')) if sources.get(i)],
         })
 
@@ -93,6 +94,15 @@ def main():
         fh.write('window.GRIST_UPDATED_ISO=' + json.dumps(today.isoformat()) + ';\n')
         fh.write('window.GRIST_CASES=' + json.dumps(cases, ensure_ascii=False).replace('</', '<\\/') + ';\n')
     print(f'{len(cases)} cas écrits dans site/data/cases.js ({updated})')
+
+    # Descriptions sans traduction (nouveaux cas ou texte modifié dans Grist) : affichées en français
+    tp = os.path.join(ROOT, 'site', 'data', 'cases_i18n.js')
+    if os.path.exists(tp):
+        t = open(tp, encoding='utf-8').read()
+        done = set(json.loads(t[t.index('{'):t.rindex('}') + 1]))
+        todo = sorted({c['n'] for c in cases if c['x'] and c['h'] not in done})
+        if todo:
+            print(f'::notice::{len(todo)} description(s) sans traduction EN/ES : ' + ', '.join(todo))
 
 
 if __name__ == '__main__':

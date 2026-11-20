@@ -227,6 +227,27 @@ const PARTNERS_I18N = {
 };
 
 const idx = LANG==='en'?0:LANG==='es'?1:-1;
+
+// Intitulés de source (table Sources_cles de Grist) : seules les formules descriptives sont traduites,
+// les titres de publications restent dans leur langue d'origine
+const SOURCE_RULES = [
+  [/^Base de données de l'étude /, ['Database from the study ','Base de datos del estudio ']],
+  [/^Communs de l'Observatoire Regen Conseil$/, ['Regen Conseil Observatory commons','Bienes comunes del Observatorio Regen Conseil']],
+  [/^Etude de cas BPI-CEC-Lumia : /, ['BPI-CEC-Lumia case study: ','Estudio de caso BPI-CEC-Lumia: ']],
+  [/^Lauréat des Lauriers de la Régénération de Nous Sommes Vivants /, ['Winner of the Nous Sommes Vivants Regeneration Laurels ','Ganador de los Laureles de la Regeneración de Nous Sommes Vivants ']],
+  [/^base de données réalisée par Niels de Fraguier, auteur de « L'Entreprise Régénérative »$/, ['database compiled by Niels de Fraguier, author of “The Regenerative Enterprise”','base de datos elaborada por Niels de Fraguier, autor de «La empresa regenerativa»']],
+  [/^Études de cas du Doughnut Economics Action Lab - /, ['Doughnut Economics Action Lab case studies - ','Estudios de caso del Doughnut Economics Action Lab - ']],
+];
+const SOURCE_WORDS = { ' et ':[' and ',' y '], 'Entreprises':['Businesses','Empresas'], 'Territoires':['Territories','Territorios'] };
+function source(label){
+  if (idx<0 || !label) return label;
+  for (const [re,tr] of SOURCE_RULES) if (re.test(label)){
+    let out = label.replace(re, tr[idx]);
+    for (const [fr,w] of Object.entries(SOURCE_WORDS)) out = out.split(fr).join(w[idx]);
+    return out;
+  }
+  return label;
+}
 let regionNames=null; try{ regionNames=new Intl.DisplayNames([LANG],{type:'region'}); }catch{}
 
 window.I18N = {
@@ -234,6 +255,7 @@ window.I18N = {
   t(k,...a){ const v=(S[LANG]&&S[LANG][k]!==undefined)?S[LANG][k]:S.fr[k]; return typeof v==='function'?v(...a):v; },
   sector(v){ return idx<0 ? v : (SECTORS[v]||[])[idx] || v; },
   size(v){ return idx<0 ? v : (SIZES[v]||[])[idx] || v; },
+  source,
   country(v, a2){ if (idx<0 || !a2 || !regionNames) return v; try{ return regionNames.of(a2) || v; }catch{ return v; } },
   partner(p){
     const tr = (PARTNERS_I18N[p.id]||{})[LANG];
