@@ -182,3 +182,13 @@ nav.tabs a .n{font-size:12px;background:var(--sand);border-radius:999px;padding:
 .partner.soonbox .plogo-ph{width:64px;height:64px;font-size:28px;font-weight:400}
 .partner.soonbox a.go{text-decoration:none}
 .pubs .soon{margin:0;font-size:14px;color:var(--muted);font-style:italic}
+.betabar{background:#f3ecd8;color:#6b5a2e;border-bottom:1px solid #e4d8b6;font-size:13px;text-align:center;padding:7px 20px;line-height:1.4}
+.langs{display:flex;gap:2px;justify-content:flex-end;margin-bottom:6px}
+.langs button{border:1px solid transparent;background:none;color:var(--muted);font:600 12px Inter,system-ui,sans-serif;letter-spacing:.06em;padding:4px 8px;border-radius:8px;cursor:pointer}
+.langs button:hover{color:var(--green)}
+.langs button.on{color:var(--green);border-color:var(--line);background:var(--paper)}
+.topcta{top:62px}
+.desclang{display:inline-block;margin-top:14px;font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 10px}
+.drawer .desclang + .desc{margin-top:8px}
+@media (max-width:900px){.langs{justify-content:flex-start}}
+html:not([lang=fr]) .team-intro p.oneline{white-space:normal}

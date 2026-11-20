@@ -1,7 +1,8 @@
 // Cartographie des cas régénératifs — données lues depuis Grist (data/cases.js, régénéré automatiquement)
 const CASES = window.GRIST_CASES || [];
 const WORLD = window.WORLD;
-const UPDATED = window.GRIST_UPDATED || '';
+const I = window.I18N, t = (...a)=>I.t(...a), LANG = I.lang;
+const UPDATED = (()=>{ const iso=window.GRIST_UPDATED_ISO; if (iso && LANG!=='fr'){ try{ return new Intl.DateTimeFormat(LANG,{day:'numeric',month:'long',year:'numeric'}).format(new Date(iso+'T12:00:00')); }catch{} } return window.GRIST_UPDATED || ''; })();
 
 const SIZE_ORDER = ['TPE / PME','ETI','Grand groupe','Territoire - Petite échelle (< 100k hab.)','Territoire - Moyenne échelle (100k - 500k hab.)','Territoire - Grande échelle (> 500k hab.)'];
 const RAMP = ['#dfe9dc','#bfd8c0','#93c0a0','#62a07c','#3d7f5d','#235c41'];
@@ -76,7 +77,13 @@ const PARTNERS = [
    li:[['https://fr.linkedin.com/in/valerie-brunel','Valérie Brunel'],['https://www.linkedin.com/in/sarahdubreil/','Sarah Dubreil']],
    link:['https://lelab.bpifrance.fr/get_pdf/3894/2023-10-livre_blanc_l%27approche_regenerative_pour_les_entreprises_-_bpifrance_le_lab_-_valerie_brunel_sarah_dubreil.pdf','Lire le livre blanc']},
 ];
+PARTNERS.forEach((p,i)=>{ PARTNERS[i]=I.partner(p); });
 const PMAP = Object.fromEntries(PARTNERS.map(p=>[p.id,p]));
+const pshort = id => PMAP[id].shortL || PMAP[id].short;
+// libellés affichés (les valeurs Grist restent en français en interne)
+const A2 = v => WORLD.nameToA2[v];
+const LC = { s:v=>I.sector(v), t:v=>I.size(v), p:v=>I.country(v,A2(v)) };
+const lst = (k,arr) => arr.map(LC[k]).join(', ');
 const partnerOf = src => (PARTNERS.find(p=>src.includes(p.match))||{}).id;
 
 const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
@@ -84,15 +91,15 @@ CASES.forEach((c,i)=>{
   c.i=i;
   c.n = (c.n||'').replace(/\s*\n\s*/g,' ');
   c.pt = [...new Set((c.o||[]).map(partnerOf).filter(Boolean))];
-  c._q = norm([c.n,c.x,c.s.join(' '),c.t.join(' '),c.p.join(' '),(c.o||[]).join(' ')].join(' '));
+  c._q = norm([c.n,c.x,c.s.join(' '),c.t.join(' '),c.p.join(' '),(c.o||[]).join(' '),lst('s',c.s),lst('t',c.t),lst('p',c.p)].join(' '));
 });
 
 // ---------- filtres ----------
 const FACETS = [
-  {key:'s', title:"Secteur d'activité", get:c=>c.s},
-  {key:'t', title:'Taille', get:c=>c.t, order:SIZE_ORDER, groups:[['Entreprises',v=>!v.startsWith('Territoire')],['Territoires',v=>v.startsWith('Territoire')]], label:v=>v.replace('Territoire - ','')},
-  {key:'p', title:'Pays', get:c=>c.p, limit:8},
-  {key:'pt', title:'Expert source', get:c=>c.pt.map(id=>PMAP[id].short), limit:5},
+  {key:'s', title:t('fSector'), get:c=>c.s, label:LC.s},
+  {key:'t', title:t('fSize'), get:c=>c.t, order:SIZE_ORDER, groups:[[t('gCompanies'),v=>!v.startsWith('Territoire')],[t('gTerritories'),v=>v.startsWith('Territoire')]], label:v=>LC.t(v).replace(/^(Territoire|Territory|Territorio) - /,'')},
+  {key:'p', title:t('fCountry'), get:c=>c.p, limit:8, label:LC.p},
+  {key:'pt', title:t('fExpert'), get:c=>c.pt.map(id=>PMAP[id].short), limit:5, label:v=>{ const p=PARTNERS.find(x=>x.short===v); return p?(p.shortL||v):v; }},
 ];
 const state = {q:'', sel:Object.fromEntries(FACETS.map(f=>[f.key,new Set()])), sort:'az', shown:60, expanded:{}};
 
@@ -126,9 +133,9 @@ function renderFacets(){
     const all = new Map(); for (const c of CASES) for (const v of f.get(c)) all.set(v,0);
     let vals = [...all.keys()];
     if (f.order) vals.sort((a,b)=>(f.order.indexOf(a)+1||99)-(f.order.indexOf(b)+1||99));
-    else vals.sort((a,b)=>(cnt.get(b)||0)-(cnt.get(a)||0) || a.localeCompare(b,'fr'));
+    else vals.sort((a,b)=>(cnt.get(b)||0)-(cnt.get(a)||0) || (f.label?f.label(a):a).localeCompare(f.label?f.label(b):b,LANG));
     const sel = state.sel[f.key];
-    const head = el('h3',{}, f.title, sel.size ? el('button',{onclick:()=>{sel.clear();update();}},'effacer') : null);
+    const head = el('h3',{}, f.title, sel.size ? el('button',{onclick:()=>{sel.clear();update();}},t('clear')) : null);
     const sec = el('div',{class:'facet'}, head);
     const mk = v => el('label',{class:'opt'+((cnt.get(v)||0)===0&&!sel.has(v)?' zero':'')},
       el('input',{type:'checkbox', checked:sel.has(v), onchange:e=>{e.target.checked?sel.add(v):sel.delete(v); update();}}),
@@ -139,7 +146,7 @@ function renderFacets(){
       const lim = f.limit && !state.expanded[f.key] ? f.limit : Infinity;
       const vis = vals.filter((v,i)=>i<lim || sel.has(v));
       vis.forEach(v=>sec.append(mk(v)));
-      if (vals.length>vis.length || (f.limit && state.expanded[f.key])) sec.append(el('button',{class:'more',onclick:()=>{state.expanded[f.key]=!state.expanded[f.key];renderFacets();}}, state.expanded[f.key]?'Voir moins':`Voir les ${vals.length}`));
+      if (vals.length>vis.length || (f.limit && state.expanded[f.key])) sec.append(el('button',{class:'more',onclick:()=>{state.expanded[f.key]=!state.expanded[f.key];renderFacets();}}, state.expanded[f.key]?t('less'):t('seeAll',vals.length)));
     }
     box.append(sec);
   }
@@ -150,16 +157,16 @@ function renderChips(){
   let any=false;
   if (state.q){ any=true; box.append(el('button',{class:'chip',onclick:()=>{state.q='';document.getElementById('q').value='';update();}},`« ${document.getElementById('q').value} »`,' ✕')); }
   for (const f of FACETS) for (const v of state.sel[f.key]){ any=true;
-    box.append(el('button',{class:'chip',title:'Retirer ce filtre',onclick:()=>{state.sel[f.key].delete(v);update();}}, (f.label?f.label(v):v),' ✕')); }
-  if (any) box.append(el('button',{class:'chip clear',onclick:()=>{state.q='';document.getElementById('q').value='';FACETS.forEach(f=>state.sel[f.key].clear());update();}},'Tout effacer'));
+    box.append(el('button',{class:'chip',title:t('removeFilter'),onclick:()=>{state.sel[f.key].delete(v);update();}}, (f.label?f.label(v):v),' ✕')); }
+  if (any) box.append(el('button',{class:'chip clear',onclick:()=>{state.q='';document.getElementById('q').value='';FACETS.forEach(f=>state.sel[f.key].clear());update();}},t('clearAll')));
 }
 
-const cmp = (a,b)=>a.localeCompare(b,'fr',{sensitivity:'base'});
+const cmp = (a,b)=>a.localeCompare(b,LANG,{sensitivity:'base'});
 function sorted(list){
   const by = {
     az:(a,b)=>cmp(a.n,b.n),
-    pays:(a,b)=>cmp(a.p[0]||'',b.p[0]||'')||cmp(a.n,b.n),
-    secteur:(a,b)=>cmp(a.s[0]||'',b.s[0]||'')||cmp(a.n,b.n),
+    pays:(a,b)=>cmp(LC.p(a.p[0]||''),LC.p(b.p[0]||''))||cmp(a.n,b.n),
+    secteur:(a,b)=>cmp(LC.s(a.s[0]||''),LC.s(b.s[0]||''))||cmp(a.n,b.n),
   }[state.sort];
   return list.slice().sort(by);
 }
@@ -168,19 +175,19 @@ let current = [];
 function caseCard(c, list){
   return el('button',{class:'case',onclick:()=>openCase(c.i, list)},
     el('h4',{},c.n),
-    el('div',{class:'meta'}, [c.p.join(', '), c.t.map(t=>t.replace('Territoire - ','Territoire · ')).join(', ')].filter(Boolean).join(' · ')),
-    el('div',{class:'tags'}, c.s.map(s=>el('span',{class:'tag'},s))),
+    el('div',{class:'meta'}, [lst('p',c.p), c.t.map(v=>LC.t(v).replace(/^(\S+) - /,'$1 · ')).join(', ')].filter(Boolean).join(' · ')),
+    el('div',{class:'tags'}, c.s.map(s=>el('span',{class:'tag'},LC.s(s)))),
     c.x ? el('p',{},c.x) : null,
-    c.pt.length ? el('div',{class:'src'},'Source : '+c.pt.map(id=>PMAP[id].short).join(' · ')) : null);
+    c.pt.length ? el('div',{class:'src'},t('source')+c.pt.map(pshort).join(' · ')) : null);
 }
 function renderGrid(list){
   current = sorted(list);
   const g=document.getElementById('grid'); g.innerHTML='';
-  document.getElementById('rescount').textContent = `${list.length} cas` + (list.length!==CASES.length?` sur ${CASES.length}`:'');
-  if (!list.length){ g.append(el('div',{class:'empty'},'Aucun cas ne correspond à ces critères.')); document.getElementById('more').hidden=true; return; }
+  document.getElementById('rescount').textContent = t('nCases',list.length) + (list.length!==CASES.length?t('outOf',CASES.length):'');
+  if (!list.length){ g.append(el('div',{class:'empty'},t('noMatch'))); document.getElementById('more').hidden=true; return; }
   for (const c of current.slice(0,state.shown)) g.append(caseCard(c, current));
   const m=document.getElementById('more'); m.hidden = current.length<=state.shown;
-  m.textContent = `Afficher plus (${current.length-state.shown} restants)`;
+  m.textContent = t('more',current.length-state.shown);
 }
 
 // ---------- carte ----------
@@ -196,7 +203,7 @@ for (const c of WORLD.countries){
 }
 // nom affiché pour un code pays : celui utilisé dans Grist
 const usedName = {}; for (const c of CASES) for (const p of c.p){ const a=WORLD.nameToA2[p]; if(a) usedName[a]=p; }
-const label = a => usedName[a] || nameOf[a];
+const label = a => { const n=usedName[a]||nameOf[a]; return n ? I.country(n,a) : n; };
 let T={x:0,y:0,k:1};
 function applyT(){ vp.setAttribute('transform',`translate(${T.x} ${T.y}) scale(${T.k})`); layoutBubbles(); }
 function clampT(){ T.k=Math.max(1,Math.min(14,T.k)); const W=WORLD.W,H=WORLD.H; T.x=Math.min(0,Math.max(W-W*T.k,T.x)); T.y=Math.min(0,Math.max(H-H*T.k,T.y)); }
@@ -211,10 +218,10 @@ function flyTo(target){
 }
 function fitBox(x0,y0,x1,y1){ const k=Math.min(14,0.9*Math.min(WORLD.W/(x1-x0), WORLD.H/(y1-y0))); const t={k,x:WORLD.W/2-k*(x0+x1)/2,y:WORLD.H/2-k*(y0+y1)/2}; const save=T; T=t; clampT(); const r={...T}; T=save; return r; }
 const ZONES = [
-  ['Monde', ()=>({x:0,y:0,k:1})],
-  ['Europe', ()=>{ const pts=['FR','GB','DE','SE','FI','ES','TR','UA','IE'].map(a=>WORLD.cent[a]); return fitBox(Math.min(...pts.map(p=>p[0]))-12,Math.min(...pts.map(p=>p[1]))-20,Math.max(...pts.map(p=>p[0]))+8,Math.max(...pts.map(p=>p[1]))+14); }],
-  ['France', ()=>{ const [x,y]=WORLD.cent.FR; return fitBox(x-26,y-22,x+26,y+22); }],
-  ['Amériques', ()=>fitBox(...WORLD.amer)],
+  [t('zones')[0], ()=>({x:0,y:0,k:1})],
+  [t('zones')[1], ()=>{ const pts=['FR','GB','DE','SE','FI','ES','TR','UA','IE'].map(a=>WORLD.cent[a]); return fitBox(Math.min(...pts.map(p=>p[0]))-12,Math.min(...pts.map(p=>p[1]))-20,Math.max(...pts.map(p=>p[0]))+8,Math.max(...pts.map(p=>p[1]))+14); }],
+  [t('zones')[2], ()=>{ const [x,y]=WORLD.cent.FR; return fitBox(x-26,y-22,x+26,y+22); }],
+  [t('zones')[3], ()=>fitBox(...WORLD.amer)],
 ];
 const zbox=document.getElementById('zones');
 ZONES.forEach(([n,f])=>zbox.append(el('button',{onclick:()=>flyTo(f())},n)));
@@ -236,7 +243,7 @@ function showTip(e,html){ const r=document.getElementById('mapbox').getBoundingC
 function hideTip(){ tip.style.opacity=0; }
 function toggleCountry(a){ const n=label(a); if(!n || !usedName[a]) return; const s=state.sel.p; s.has(n)?s.delete(n):s.add(n); update(); }
 land.addEventListener('click',e=>{ if(moved) return; const a=e.target.dataset?.a; if(a) toggleCountry(a); });
-land.addEventListener('pointermove',e=>{ if(drag&&moved) return; const a=e.target.dataset?.a; if(!a||!label(a)) return hideTip(); showTip(e,`<b>${label(a)}</b> · ${countBy[a]||0} cas`); });
+land.addEventListener('pointermove',e=>{ if(drag&&moved) return; const a=e.target.dataset?.a; if(!a||!label(a)) return hideTip(); showTip(e,`<b>${label(a)}</b> · ${t('nCases',countBy[a]||0)}`); });
 land.addEventListener('pointerleave',hideTip);
 
 let countBy={}, bubbleData=[];
@@ -255,11 +262,11 @@ function renderMap(list){
     const t=document.createElementNS(NS,'text'); t.setAttribute('class','bubble-label'); t.textContent=n;
     g.append(c,t); bubs.append(g);
     g.addEventListener('click',()=>{ if(!moved) toggleCountry(a); });
-    g.addEventListener('pointermove',e=>showTip(e,`<b>${label(a)}</b> · ${n} cas`)); g.addEventListener('pointerleave',hideTip);
+    g.addEventListener('pointermove',e=>showTip(e,`<b>${label(a)}</b> · ${t('nCases',n)}`)); g.addEventListener('pointerleave',hideTip);
     bubbleData.push({a,n,c,t});
   });
   layoutBubbles();
-  document.getElementById('legend').innerHTML=`Nombre de cas par pays<div class="ramp">${RAMP.map(c=>`<span style="background:${c}"></span>`).join('')}</div><div class="ramp-l"><span>1</span><span>${max}</span></div>`;
+  document.getElementById('legend').innerHTML=`${t('legend')}<div class="ramp">${RAMP.map(c=>`<span style="background:${c}"></span>`).join('')}</div><div class="ramp-l"><span>1</span><span>${max}</span></div>`;
 }
 function layoutBubbles(){
   const R=svg.getBoundingClientRect(); const ds=R.width?Math.min(R.width/WORLD.W,R.height/WORLD.H):1;
@@ -293,7 +300,7 @@ function sourceBoxes(c){
       el('div',{style:'display:flex;gap:12px;align-items:center'}, avatar(p,40),
         el('div',{}, el('span',{class:'ptype'},p.type), el('div',{class:'sname',style:'margin-top:4px'},p.name))),
       refs.map(r=>el('div',{class:'sref'},r)),
-      el('button',{onclick:()=>{closeCase(); location.hash='p-'+id;}},'Découvrir cet expert →'));
+      el('button',{onclick:()=>{closeCase(); location.hash='p-'+id;}},t('discover')));
   });
 }
 function openCase(i, list){
@@ -304,19 +311,20 @@ function openCase(i, list){
   let site;
   if (c.w){ const href=/^https?:\/\//i.test(c.w)?c.w:'https://'+c.w;
     let host=''; try{host=new URL(href).hostname.replace(/^www\./,'');}catch{}
-    site=el('div',{class:'dsite'}, el('a',{class:'btn',href,target:'_blank',rel:'noopener noreferrer',title:href},'Visiter le site ↗'), host?el('span',{},host):null); }
-  else site=el('div',{class:'dsite'}, el('span',{},'Aucun site renseigné dans la base.'));
+    site=el('div',{class:'dsite'}, el('a',{class:'btn',href,target:'_blank',rel:'noopener noreferrer',title:href},t('visit')), host?el('span',{},host):null); }
+  else site=el('div',{class:'dsite'}, el('span',{},t('noSite')));
   body.append(...[
-    el('div',{class:'tags',style:'margin-bottom:10px'}, c.s.map(s=>el('span',{class:'tag'},s))),
+    el('div',{class:'tags',style:'margin-bottom:10px'}, c.s.map(s=>el('span',{class:'tag'},LC.s(s)))),
     el('h2',{id:'dtitle'},c.n),
-    el('div',{style:'color:var(--muted)'}, [c.p.join(', '), c.t.join(', ')].filter(Boolean).join(' · ')),
-    c.x ? el('div',{class:'desc'},c.x) : el('div',{class:'desc',style:'color:var(--muted)'},'Pas de description renseignée.'),
+    el('div',{style:'color:var(--muted)'}, [lst('p',c.p), lst('t',c.t)].filter(Boolean).join(' · ')),
+    c.x && t('descLang') ? el('div',{class:'desclang'},t('descLang')) : null,
+    c.x ? el('div',{class:'desc',lang:'fr'},c.x) : el('div',{class:'desc',style:'color:var(--muted)'},t('noDesc')),
     el('dl',{},
-      el('dt',{},'Pays'), el('dd',{},c.p.join(', ')||'—'),
-      el('dt',{},'Taille'), el('dd',{},c.t.join(', ')||'—'),
-      el('dt',{},"Secteur d'activité"), el('dd',{},c.s.join(', ')||'—')),
-    el('h4',{style:'margin:22px 0 10px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)'}, c.pt.length>1?'Identifié par nos experts sources':'Identifié par notre expert source'),
-    c.o.length ? sourceBoxes(c) : el('div',{style:'color:var(--muted)'},'Source non renseignée.'),
+      el('dt',{},t('fCountry')), el('dd',{},lst('p',c.p)||'—'),
+      el('dt',{},t('fSize')), el('dd',{},lst('t',c.t)||'—'),
+      el('dt',{},t('fSector')), el('dd',{},lst('s',c.s)||'—')),
+    el('h4',{style:'margin:22px 0 10px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)'}, c.pt.length>1?t('identifiedMany'):t('identifiedOne')),
+    c.o.length ? sourceBoxes(c) : el('div',{style:'color:var(--muted)'},t('noSource')),
     site].flat().filter(Boolean));
   drawer.classList.add('on'); overlay.classList.add('on'); body.scrollTop=0;
   document.getElementById('dclose').focus({preventScroll:true});
@@ -338,11 +346,11 @@ document.getElementById('ftoggle').onclick=()=>{document.getElementById('filters
   const countries=new Set(CASES.flatMap(c=>c.p)), sectors=new Set(CASES.flatMap(c=>c.s));
   const terr=CASES.filter(c=>c.t.some(t=>t.startsWith('Territoire'))).length;
   document.getElementById('stats').append(
-    el('span',{class:'stat'},el('b',{},String(CASES.length)),' cas'),
-    el('span',{class:'stat'},el('b',{},String(countries.size)),' pays'),
-    el('span',{class:'stat'},el('b',{},String(sectors.size)),' secteurs'),
-    el('span',{class:'stat'},el('b',{},String(CASES.length-terr)),' entreprises · ',el('b',{},String(terr)),' territoires'));
-  document.getElementById('foot').textContent = `Données : base Regen (Grist)${UPDATED?', mise à jour du '+UPDATED:''}. Les cas sont localisés à l'échelle du pays. Présentations des experts rédigées à partir de leurs publications et informations publiques.`;
+    el('span',{class:'stat'},el('b',{},String(CASES.length)),t('stCases')),
+    el('span',{class:'stat'},el('b',{},String(countries.size)),t('stCountries')),
+    el('span',{class:'stat'},el('b',{},String(sectors.size)),t('stSectors')),
+    el('span',{class:'stat'},el('b',{},String(CASES.length-terr)),t('stCompanies'),el('b',{},String(terr)),t('stTerr')));
+  document.getElementById('foot').textContent = t('foot',UPDATED);
 })();
 
 // ---------- experts sources ----------
@@ -352,22 +360,22 @@ const pubsOf = id => [...new Set(CASES.flatMap(c=>c.o.filter(o=>partnerOf(o)===i
 function renderPartnerList(){
   pview.innerHTML='';
   pview.append(
-    el('p',{class:'pintro'},`Cette cartographie existe grâce aux travaux de ${PARTNERS.length} experts sources : chercheurs, auteurs, réseaux et communautés qui repèrent et documentent les initiatives régénératives. Découvrez qui ils sont et les sources dont sont issus les cas.`),
+    el('p',{class:'pintro'},t('pIntro',PARTNERS.length)),
     el('div',{class:'pgrid'}, PARTNERS.map(p=>el('button',{class:'partner',onclick:()=>{location.hash='p-'+p.id;}},
       el('div',{class:'ptop'}, avatar(p,64), el('div',{}, el('span',{class:'ptype'},p.type), el('h3',{style:'margin-top:8px'},p.name))),
       el('p',{}, p.desc.length>260 ? p.desc.slice(0,p.desc.lastIndexOf(' ',250))+'…' : p.desc),
-      el('div',{class:'go'},'Qui sont-ils ? →'))),
+      el('div',{class:'go'},t('whoAre')))),
       el('div',{class:'partner soonbox'},
         el('div',{class:'plogo-ph'},'+'),
-        el('h3',{},"D'autres sources à venir"),
-        el('p',{},"La cartographie s'enrichit au fil des travaux d'autres experts. Vous connaissez une source à intégrer ?"),
-        el('a',{class:'go',href:'https://docs.google.com/forms/d/e/1FAIpQLSfeGm5kJ-brRfsQR2Y4xlbwXPZdB864_upZ3xWdo4bvL_5VIg/viewform',target:'_blank',rel:'noopener noreferrer'},'Contactez-nous ↗'))));
+        el('h3',{},t('soonTitle')),
+        el('p',{},t('soonText')),
+        el('a',{class:'go',href:'https://docs.google.com/forms/d/e/1FAIpQLSfeGm5kJ-brRfsQR2Y4xlbwXPZdB864_upZ3xWdo4bvL_5VIg/viewform',target:'_blank',rel:'noopener noreferrer'},t('contact')))));
 }
 function renderPartner(id){
   const p=PMAP[id]; if(!p){ location.hash='partenaires'; return; }
   pview.innerHTML='';
   pview.append(
-    el('button',{class:'pback',onclick:()=>{location.hash='partenaires';}},'← Tous les experts'),
+    el('button',{class:'pback',onclick:()=>{location.hash='partenaires';}},t('back')),
     el('div',{class:'phero'},
       el('div',{},
         el('div',{style:'display:flex;flex-direction:column;gap:16px;align-items:flex-start'}, avatar(p,96),
@@ -376,10 +384,10 @@ function renderPartner(id){
         p.facts.length ? el('ul',{class:'facts'}, p.facts.map(f=>el('li',{},f))) : null,
         el('div',{class:'pactions'},
           p.link ? el('a',{class:'btn',href:p.link[0],target:'_blank',rel:'noopener noreferrer'},p.link[1]+' ↗') : null,
-          (p.li||[]).map(([u,l])=>el('a',{class:'btn ghost',href:u,target:'_blank',rel:'noopener noreferrer',title:'Profil LinkedIn'},el('span',{class:'inb'},'in'),(p.li.length>1||l!==p.short?l:'LinkedIn')+' ↗')))),
+          (p.li||[]).map(([u,l])=>el('a',{class:'btn ghost',href:u,target:'_blank',rel:'noopener noreferrer',title:t('liProfile')},el('span',{class:'inb'},'in'),(p.li.length>1||l!==p.short?l:'LinkedIn')+' ↗')))),
       el('div',{class:'pside'},
-        el('div',{class:'pubs'}, el('h4',{},'Sources associées'), pubsOf(id).length ? el('ul',{}, pubsOf(id).map(o=>el('li',{},o))) : el('p',{class:'soon'},'Les cas issus de cette source arrivent bientôt dans la cartographie.')),
-        !pubsOf(id).length ? null : el('button',{class:'btn ghost',style:'align-self:flex-start',onclick:()=>{ state.q=''; document.getElementById('q').value=''; FACETS.forEach(f=>state.sel[f.key].clear()); state.sel.pt.add(p.short); location.hash='carte'; update(); }},'Voir les cas issus de cette source →'))));
+        el('div',{class:'pubs'}, el('h4',{},t('related')), pubsOf(id).length ? el('ul',{}, pubsOf(id).map(o=>el('li',{},o))) : el('p',{class:'soon'},t('soonCases'))),
+        !pubsOf(id).length ? null : el('button',{class:'btn ghost',style:'align-self:flex-start',onclick:()=>{ state.q=''; document.getElementById('q').value=''; FACETS.forEach(f=>state.sel[f.key].clear()); state.sel.pt.add(p.short); location.hash='carte'; update(); }},t('seeCases')))));
 }
 function route(){
   const h=location.hash.slice(1);

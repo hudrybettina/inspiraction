@@ -11,85 +11,87 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div class="betabar" role="note" data-i18n="beta">Version de travail : ce site est en construction et n'a pas encore été lancé officiellement. Les contenus et les chiffres peuvent évoluer.</div>
 <div class="wrap">
   <header class="top">
-    <div class="eyebrow">Base de données Regen : Inspir'Action</div>
-    <h1>La cartographie des cas régénératifs</h1>
-    <p class="lede">Entreprises et territoires engagés dans la régénération du vivant, recensés à partir de plusieurs sources documentaires. Explorez par pays sur la carte, filtrez par secteur, taille ou pays, et ouvrez chaque fiche pour en savoir plus.</p>
+    <div class="langs" id="langs" role="group" aria-label="Langue / Language / Idioma"></div>
+    <div class="eyebrow" data-i18n="eyebrow">Base de données Regen : Inspir'Action</div>
+    <h1 data-i18n="h1">La cartographie des cas régénératifs</h1>
+    <p class="lede" data-i18n="lede">Entreprises et territoires engagés dans la régénération du vivant, recensés à partir de plusieurs sources documentaires. Explorez par pays sur la carte, filtrez par secteur, taille ou pays, et ouvrez chaque fiche pour en savoir plus.</p>
     <div class="stats" id="stats"></div>
-    <a class="btn cta topcta" href="https://docs.google.com/forms/d/e/1FAIpQLSfeGm5kJ-brRfsQR2Y4xlbwXPZdB864_upZ3xWdo4bvL_5VIg/viewform" target="_blank" rel="noopener noreferrer">Un exemple n'y est pas ? Contactez-nous</a>
+    <a class="btn cta topcta" href="https://docs.google.com/forms/d/e/1FAIpQLSfeGm5kJ-brRfsQR2Y4xlbwXPZdB864_upZ3xWdo4bvL_5VIg/viewform" target="_blank" rel="noopener noreferrer" data-i18n="topcta">Un exemple n'y est pas ? Contactez-nous</a>
   </header>
 
   <nav class="tabs" id="tabs">
-    <a href="#carte" data-v="carte">Cartographie &amp; cas</a>
-    <a href="#partenaires" data-v="partenaires">Experts sources<span class="n" id="pcount"></span></a>
-    <a href="#equipe" data-v="equipe">L'équipe</a>
+    <a href="#carte" data-v="carte"><span data-i18n="tabMap">Cartographie &amp; cas</span></a>
+    <a href="#partenaires" data-v="partenaires"><span data-i18n="tabExperts">Experts sources</span><span class="n" id="pcount"></span></a>
+    <a href="#equipe" data-v="equipe" data-i18n="tabTeam">L'équipe</a>
   </nav>
 
   <section class="view" id="view-partenaires" hidden></section>
 
   <section class="view" id="view-equipe" hidden>
     <div class="team-intro">
-      <h2>Qui sommes-nous ?</h2>
-      <p class="oneline">Tous les trois alumni de la formation « économie symbiotique » d'Isabelle Delannoy au CNAM, nous sommes portés par l'élan de :</p>
+      <h2 data-i18n="teamWho">Qui sommes-nous ?</h2>
+      <p class="oneline" data-i18n="teamOneline">Tous les trois alumni de la formation « économie symbiotique » d'Isabelle Delannoy au CNAM, nous sommes portés par l'élan de :</p>
       <ul>
-        <li><span class="emo">🌱</span>Mettre en lumière l’ensemble des entreprises pionnières qui œuvrent vers une trajectoire régénérative pour inspirer d’autres organisations proches de leurs enjeux</li>
-        <li><span class="emo">💡</span>Montrer qu'en pensant autrement, on peut créer autant de valeur pour l’entreprise et assurer la pérennité de l’entreprise face aux chocs environnementaux et sociaux à venir</li>
-        <li><span class="emo">🤝</span>Mutualiser les travaux d'identification déjà menés par différents experts dans un seul commun</li>
+        <li><span class="emo">🌱</span><span data-i18n="team1">Mettre en lumière l’ensemble des entreprises pionnières qui œuvrent vers une trajectoire régénérative pour inspirer d’autres organisations proches de leurs enjeux</span></li>
+        <li><span class="emo">💡</span><span data-i18n="team2">Montrer qu'en pensant autrement, on peut créer autant de valeur pour l’entreprise et assurer la pérennité de l’entreprise face aux chocs environnementaux et sociaux à venir</span></li>
+        <li><span class="emo">🤝</span><span data-i18n="team3">Mutualiser les travaux d'identification déjà menés par différents experts dans un seul commun</span></li>
       </ul>
     </div>
-    <h3 class="team-h">L'équipe cœur</h3>
+    <h3 class="team-h" data-i18n="teamCore">L'équipe cœur</h3>
     <div class="team-row">
       <div class="member"><img class="mphoto" alt="Maelys Lecrivain" src="img/equipe/maelys.jpg"><div class="mname">Maelys Lecrivain</div><a class="btn ghost" href="https://www.linkedin.com/in/maelys-lecrivain/" target="_blank" rel="noopener noreferrer"><span class="inb">in</span>LinkedIn ↗</a></div>
       <div class="member"><img class="mphoto" alt="Loïc Marcé" src="img/equipe/loic.jpg"><div class="mname">Loïc Marcé</div><a class="btn ghost" href="https://www.linkedin.com/in/loicmarce/" target="_blank" rel="noopener noreferrer"><span class="inb">in</span>LinkedIn ↗</a></div>
       <div class="member"><img class="mphoto" alt="Bettina Hudry-Gerez" src="img/equipe/bettina.jpg"><div class="mname">Bettina Hudry-Gerez</div><a class="btn ghost" href="https://www.linkedin.com/in/bettinahudrygerez-sustainability-systemicchange-innovation/" target="_blank" rel="noopener noreferrer"><span class="inb">in</span>LinkedIn ↗</a></div>
     </div>
-    <h3 class="team-h">Les bénévoles</h3>
+    <h3 class="team-h" data-i18n="teamVol">Les bénévoles</h3>
     <div class="team-row">
-      <div class="member ph"><div class="mphoto ph">+</div><div class="mname">Bientôt ici</div><span>Photo · nom · LinkedIn</span></div>
+      <div class="member ph"><div class="mphoto ph">+</div><div class="mname" data-i18n="soonHere">Bientôt ici</div><span data-i18n="volPh">Photo · nom · LinkedIn</span></div>
     </div>
-    <h3 class="team-h">Nos soutiens financiers</h3>
+    <h3 class="team-h" data-i18n="teamFund">Nos soutiens financiers</h3>
     <div class="team-row">
-      <div class="member ph"><div class="plogo-ph">Logo</div><div class="mname">Bientôt ici</div><span class="why">Une phrase sur leurs motivations à soutenir le projet</span></div>
+      <div class="member ph"><div class="plogo-ph" data-i18n="logo">Logo</div><div class="mname" data-i18n="soonHere">Bientôt ici</div><span class="why" data-i18n="why">Une phrase sur leurs motivations à soutenir le projet</span></div>
     </div>
-    <h3 class="team-h">Nos partenaires</h3>
+    <h3 class="team-h" data-i18n="teamPart">Nos partenaires</h3>
     <div class="team-row">
-      <div class="member ph"><div class="plogo-ph">Logo</div><div class="mname">Bientôt ici</div><span class="why">Une phrase sur leurs motivations à soutenir le projet</span></div>
+      <div class="member ph"><div class="plogo-ph" data-i18n="logo">Logo</div><div class="mname" data-i18n="soonHere">Bientôt ici</div><span class="why" data-i18n="why">Une phrase sur leurs motivations à soutenir le projet</span></div>
     </div>
   </section>
 
   <div class="layout view" id="view-carte">
-    <aside class="filters" id="filters" aria-label="Filtres">
+    <aside class="filters" id="filters" data-i18n-attr="aria-label:filters" aria-label="Filtres">
       <div class="search">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="q" type="search" placeholder="Rechercher un cas, un mot-clé…" autocomplete="off">
+        <input id="q" data-i18n-attr="placeholder:search" type="search" placeholder="Rechercher un cas, un mot-clé…" autocomplete="off">
       </div>
       <div id="facets"></div>
     </aside>
 
     <main>
       <section class="card-panel mapbox" id="mapbox">
-        <svg id="map" role="img" aria-label="Carte du monde du nombre de cas par pays"><g id="vp"><g id="land"></g><g id="bubbles"></g></g></svg>
+        <svg id="map" role="img" data-i18n-attr="aria-label:mapAria" aria-label="Carte du monde du nombre de cas par pays"><g id="vp"><g id="land"></g><g id="bubbles"></g></g></svg>
         <div class="mapzones" id="zones"></div>
         <div class="mapctl">
-          <button id="zin" title="Zoomer" aria-label="Zoomer">+</button>
-          <button id="zout" title="Dézoomer" aria-label="Dézoomer">−</button>
+          <button id="zin" data-i18n-attr="title:zoomIn;aria-label:zoomIn" title="Zoomer" aria-label="Zoomer">+</button>
+          <button id="zout" data-i18n-attr="title:zoomOut;aria-label:zoomOut" title="Dézoomer" aria-label="Dézoomer">−</button>
         </div>
         <div class="legend" id="legend"></div>
-        <div class="maphint">Cliquez sur un pays pour filtrer · molette pour zoomer</div>
+        <div class="maphint" data-i18n="mapHint">Cliquez sur un pays pour filtrer · molette pour zoomer</div>
         <div class="tip" id="tip"></div>
       </section>
 
       <div class="resbar">
-        <button class="filters-toggle" id="ftoggle">☰ Filtres</button>
+        <button class="filters-toggle" id="ftoggle" data-i18n="ftoggle">☰ Filtres</button>
         <h2 id="rescount"></h2>
-        <a class="btn cta" href="https://docs.google.com/forms/d/e/1FAIpQLSfeGm5kJ-brRfsQR2Y4xlbwXPZdB864_upZ3xWdo4bvL_5VIg/viewform" target="_blank" rel="noopener noreferrer">+ Proposer un cas</a>
+        <a class="btn cta" href="https://docs.google.com/forms/d/e/1FAIpQLSfeGm5kJ-brRfsQR2Y4xlbwXPZdB864_upZ3xWdo4bvL_5VIg/viewform" target="_blank" rel="noopener noreferrer" data-i18n="propose">+ Proposer un cas</a>
         <div class="grow"></div>
-        <label for="sort" style="font-size:13px;color:var(--muted)">Trier</label>
+        <label for="sort" style="font-size:13px;color:var(--muted)" data-i18n="sort">Trier</label>
         <select id="sort">
-          <option value="az">Nom (A → Z)</option>
-          <option value="pays">Pays</option>
-          <option value="secteur">Secteur</option>
+          <option value="az" data-i18n="sortAz">Nom (A → Z)</option>
+          <option value="pays" data-i18n="sortPays">Pays</option>
+          <option value="secteur" data-i18n="sortSecteur">Secteur</option>
         </select>
       </div>
       <div class="chips" id="chips"></div>
@@ -103,16 +105,17 @@
 <div class="overlay" id="overlay"></div>
 <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dtitle">
   <div class="dhead">
-    <button id="dprev" aria-label="Cas précédent">‹</button>
-    <button id="dnext" aria-label="Cas suivant">›</button>
+    <button id="dprev" data-i18n-attr="aria-label:prev" aria-label="Cas précédent">‹</button>
+    <button id="dnext" data-i18n-attr="aria-label:next" aria-label="Cas suivant">›</button>
     <div class="grow" id="dpos"></div>
-    <button id="dclose" aria-label="Fermer">✕</button>
+    <button id="dclose" data-i18n-attr="aria-label:close" aria-label="Fermer">✕</button>
   </div>
   <div class="dbody" id="dbody"></div>
 </aside>
 
 <script src="data/world.js"></script>
 <script src="data/cases.js"></script>
+<script src="i18n.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

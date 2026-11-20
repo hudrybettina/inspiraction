@@ -90,6 +90,7 @@ def main():
     out = os.path.join(ROOT, 'site', 'data', 'cases.js')
     with open(out, 'w', encoding='utf-8') as fh:
         fh.write('window.GRIST_UPDATED=' + json.dumps(updated, ensure_ascii=False) + ';\n')
+        fh.write('window.GRIST_UPDATED_ISO=' + json.dumps(today.isoformat()) + ';\n')
         fh.write('window.GRIST_CASES=' + json.dumps(cases, ensure_ascii=False).replace('</', '<\\/') + ';\n')
     print(f'{len(cases)} cas écrits dans site/data/cases.js ({updated})')
 
